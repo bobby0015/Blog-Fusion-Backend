@@ -1,7 +1,7 @@
 const userModel = require("../models/user_model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { uploadImage } = require("./image-cloudinary");
+const { uploadImage, deleteImageByUrl } = require("./image-cloudinary");
 
 // Create a new account
 const userSignup = async (req, res) => {
@@ -18,7 +18,6 @@ const userSignup = async (req, res) => {
       bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(password, salt, async (err, hashedPassword) => {
           if (err) {
-            console.log(err);
             return;
           }
 
@@ -51,7 +50,6 @@ const userSignup = async (req, res) => {
         });
       });
     } catch (err) {
-      console.log(err);
       return res
         .status(500)
         .json({ message: "Internal Server Error", success: false });
@@ -84,7 +82,6 @@ const userSignin = async (req, res) => {
       .status(200)
       .json({ message: "Login successful", success: true, user_token });
   } catch (err) {
-    console.log(err);
     return res
       .status(500)
       .json({ message: "Internal Server Error", success: false });
@@ -105,6 +102,7 @@ const getUserProfile = async (req, res) => {
         .status(404)
         .json({ message: "User Not Found", success: false });
     }
+
     res.status(200).json({ message: "User Profile", success: true, user });
   } catch (err) {
     return res
@@ -133,8 +131,6 @@ const updateUserProfile = async (req, res) => {
     
     const image_url = req.file ? await uploadImage(req.file) : null;
 
-    console.log(image_url);
-
     const updatedFields = {
       firstName: firstName || user.firstName,
       lastName: lastName || user.lastName,
@@ -152,7 +148,6 @@ const updateUserProfile = async (req, res) => {
       .status(200)
       .json({ message: "User Profile Updated", success: true, updatedUser });
   } catch (err) {
-    console.log(err);
     return res
       .status(500)
       .json({ message: "Internal Server Error", success: false });
@@ -167,15 +162,19 @@ const deleteUserProfile = async (req, res) => {
       .json({ message: "Unable to find the user", success: false });
   }
   try {
-    const user = await userModel.findByIdAndDelete(userId);
+    const user = await userModel.findById(userId);
     if (!user) {
       return res
-        .status(404)
-        .json({ message: "User Not Found", success: false });
+      .status(404)
+      .json({ message: "User Not Found", success: false });
     }
-    res.status(200).json({ message: "User Profile Deleted", success: true });
+    // Delete the user's image from Cloudinary
+    await deleteImageByUrl(user.profileImageURL)
+    
+    // Delete the user from the database
+    const deletedUser = await userModel.deleteOne({ _id: userId });
+    res.status(200).json({ message: "User Profile Deleted", success: true,deletedUser });
   } catch (err) {
-    console.log(err);
     return res
       .status(500)
       .json({ message: "Internal Server Error", success: false });
