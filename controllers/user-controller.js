@@ -49,40 +49,136 @@ const userSignup = async (req, res) => {
       });
     } catch (err) {
       console.log(err);
+      return res
+        .status(500)
+        .json({ message: "Internal Server Error", success: false });
     }
   }
 };
 
 // Sign In an existing account
-const userSignin = async (req,res) =>{
-    const { email, password } = req.body;
+const userSignin = async (req, res) => {
+  const { email, password } = req.body;
 
-    const user = await userModel.findOne({ email });
+  const user = await userModel.findOne({ email });
 
+  if (!user) {
+    return res.status(404).json({ message: "User Not Found", success: false });
+  }
+
+  try {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ message: "Invalid Credentials. Try again", success: false });
+    }
+    const user_token = jwt.sign(
+      { email, id: user._id },
+      process.env.SECRET_KEY
+    );
+    res
+      .status(200)
+      .json({ message: "Login successful", success: true, user_token });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", success: false });
+  }
+};
+
+const getUserProfile = async (req, res) => {
+  const userId = req.params.id;
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ message: "Unable to find the user", success: false });
+  }
+  try {
+    const user = await userModel.findById(userId);
     if (!user) {
       return res
-       .status(404)
-       .json({ message: "User Not Found", success: false });
+        .status(404)
+        .json({ message: "User Not Found", success: false });
+    }
+    res.status(200).json({ message: "User Profile", success: true, user });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", success: false });
+  }
+};
+
+const updateUserProfile = async (req, res) => {
+  const userId = req.params.id;
+  const { firstName, lastName, userBio, profileImageURL } = req.body;
+
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ message: "Unable to find the user", success: false });
+  }
+
+  try {
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User Not Found", success: false });
     }
 
-    try {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-          return res
-           .status(400)
-           .json({ message: "Invalid Credentials. Try again", success: false });
-        }
-        const user_token = jwt.sign(
-            { email, id: user._id },
-            process.env.SECRET_KEY
-        );
-        res.status(200).json({ message: "Login successful", success: true, user_token });
-    }catch (err){
-        console.log(err);
+    const updatedFields = {
+      firstName: firstName || user.firstName,
+      lastName: lastName || user.lastName,
+      userBio: userBio || user.userBio,
+      profileImageURL: profileImageURL || user.profileImageURL,
+    };
+
+    // Update the user in the database
+    const updatedUser = await userModel.updateOne(
+      { _id: userId },
+      { $set: updatedFields }
+    );
+
+    res
+      .status(200)
+      .json({ message: "User Profile Updated", success: true, updatedUser });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", success: false });
+  }
+};
+
+const deleteUserProfile = async (req, res) => {
+  const userId = req.params.id;
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ message: "Unable to find the user", success: false });
+  }
+  try {
+    const user = await userModel.findByIdAndDelete(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User Not Found", success: false });
     }
-}
+    res.status(200).json({ message: "User Profile Deleted", success: true });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", success: false });
+  }
+};
 
 module.exports = {
   userSignup,
-  userSignin
+  userSignin,
+  getUserProfile,
+  updateUserProfile,
+  deleteUserProfile
 };
