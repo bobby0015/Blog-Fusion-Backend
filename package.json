@@ -1,0 +1,19 @@
+{
+  "name": "blog-fusion-backend",
+  "version": "1.0.0",
+  "description": "A backend server for blog fusion app, which helps to communicate with server to create, update, delete and manage thier blogs.",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Divyam Chauhan",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5"
+  }
+}
