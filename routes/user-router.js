@@ -18,7 +18,7 @@ const router = express.Router();
 router
   .route("/profile/:id")
   .get(getUserProfile)
-  .put(updateUserProfile)
+  .put(deletePreviousFile, upload.single("file"),updateUserProfile)
   .delete(deleteUserProfile);
 
 // User Signup

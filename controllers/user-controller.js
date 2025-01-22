@@ -1,11 +1,11 @@
 const userModel = require("../models/user_model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { uploadImage } = require("./image-cloudinary");
 
 // Create a new account
 const userSignup = async (req, res) => {
-  const { firstName, lastName, email, password, profileImageURL, userBio } =
-    req.body;
+  const { firstName, lastName, email, password, userBio } = req.body;
 
   const user = await userModel.findOne({ email });
   if (user) {
@@ -21,12 +21,15 @@ const userSignup = async (req, res) => {
             console.log(err);
             return;
           }
+
+          const image_url = req.file ? await uploadImage(req.file) : null;
+
           const newUser = await userModel.create({
             firstName,
             lastName,
             email,
             password: hashedPassword,
-            profileImageURL,
+            profileImageURL: image_url || null,
             userBio,
           });
 
@@ -112,7 +115,7 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   const userId = req.params.id;
-  const { firstName, lastName, userBio, profileImageURL } = req.body;
+  const { firstName, lastName, userBio } = req.body;
 
   if (!userId) {
     return res
@@ -127,12 +130,16 @@ const updateUserProfile = async (req, res) => {
         .status(404)
         .json({ message: "User Not Found", success: false });
     }
+    
+    const image_url = req.file ? await uploadImage(req.file) : null;
+
+    console.log(image_url);
 
     const updatedFields = {
       firstName: firstName || user.firstName,
       lastName: lastName || user.lastName,
       userBio: userBio || user.userBio,
-      profileImageURL: profileImageURL || user.profileImageURL,
+      profileImageURL: image_url || user.profileImageURL,
     };
 
     // Update the user in the database
@@ -180,5 +187,5 @@ module.exports = {
   userSignin,
   getUserProfile,
   updateUserProfile,
-  deleteUserProfile
+  deleteUserProfile,
 };
