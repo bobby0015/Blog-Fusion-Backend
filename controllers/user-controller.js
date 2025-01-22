@@ -2,6 +2,7 @@ const userModel = require("../models/user_model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+// Create a new account
 const userSignup = async (req, res) => {
   const { firstName, lastName, email, password, profileImageURL, userBio } =
     req.body;
@@ -9,7 +10,7 @@ const userSignup = async (req, res) => {
   const user = await userModel.findOne({ email });
   if (user) {
     res
-      .status(404)
+      .status(409)
       .json({ message: "User Already Registered", success: false });
     return;
   } else {
@@ -52,6 +53,36 @@ const userSignup = async (req, res) => {
   }
 };
 
+// Sign In an existing account
+const userSignin = async (req,res) =>{
+    const { email, password } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res
+       .status(404)
+       .json({ message: "User Not Found", success: false });
+    }
+
+    try {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          return res
+           .status(400)
+           .json({ message: "Invalid Credentials. Try again", success: false });
+        }
+        const user_token = jwt.sign(
+            { email, id: user._id },
+            process.env.SECRET_KEY
+        );
+        res.status(200).json({ message: "Login successful", success: true, user_token });
+    }catch (err){
+        console.log(err);
+    }
+}
+
 module.exports = {
   userSignup,
+  userSignin
 };
