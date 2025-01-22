@@ -1,11 +1,15 @@
 const express = require("express");
 const app = express();
+const userRouter = require("./routes/user-router")
 require("dotenv").config();
 require("./config/db");
 
-app.get("/", (req, res) => {
-  console.log("Welcome to my API!");
-});
+// middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// routes
+app.use("/user",userRouter)
 
 const PORT = process.env.PORT || 5000;
 
