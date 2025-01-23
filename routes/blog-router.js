@@ -1,14 +1,22 @@
-const express = require('express');
-const { createBlog } = require('../controllers/blog-controller');
-const { deletePreviousFile, upload } = require('../middlewares/upload_image_multer');
-const checkToken = require('../middlewares/blog_auth_middleware');
+const express = require("express");
+const { createBlog, getAllBlogs } = require("../controllers/blog-controller");
+const {
+  deletePreviousFile,
+  upload,
+} = require("../middlewares/upload_image_multer");
+const checkToken = require("../middlewares/blog_auth_middleware");
 
 const router = express.Router();
 
-router.get("/",(req,res)=>{
-    res.json({message: "This is a test",id:req.body.authorId});
-})
+router.route("/:id").get(checkToken,getAllBlogs);
 
-router.post("/create",deletePreviousFile,upload.single("coverImage"),checkToken,createBlog)
+// creating a new blog post
+router.post(
+  "/create",
+  deletePreviousFile,
+  upload.single("coverImage"),
+  checkToken,
+  createBlog
+);
 
 module.exports = router;

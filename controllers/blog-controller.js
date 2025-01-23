@@ -31,4 +31,24 @@ const createBlog = async (req, res) => {
   }
 };
 
-module.exports = { createBlog };
+// Get all blog posts for an author
+const getAllBlogs = async (req, res) => {
+  const authorId = req.body.authorId;
+  const user = await userModel.findById(authorId);
+  const isAuthor = user.role.find((role) => role === "author") ? true : false;
+  if (!user || !isAuthor) {
+    return res
+      .status(404)
+      .json({ message: "Author not found", success: false });
+  }
+  try {
+    const blogs = await blogModel.find({ authorId });
+    res.status(200).json({ message: "Blog found", success: true, blogs });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Failed to get all blogs", success: false });
+  }
+};
+
+module.exports = { createBlog, getAllBlogs };
