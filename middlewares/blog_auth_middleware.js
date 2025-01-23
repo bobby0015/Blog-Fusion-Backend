@@ -15,8 +15,7 @@ const checkToken = (req, res, next) => {
         next();
     }catch(err){
         return res.status(500).json({ error: 'Failed to authenticate token' })
-    }
-    
+    }  
 }
 
 module.exports = checkToken

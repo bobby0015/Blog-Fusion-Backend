@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const userRouter = require("./routes/user-router")
 const blogRouter = require("./routes/blog-router");
-const checkToken = require("./middlewares/blog_auth_middleware");
 require("dotenv").config();
 require("./config/db");
 
@@ -12,7 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use("/user",userRouter)
-app.use("/api/v2/blog",checkToken,blogRouter)
+app.use("/api/v2/blog",blogRouter)
 
 const PORT = process.env.PORT || 5000;
 
