@@ -1,5 +1,5 @@
 const express = require("express");
-const { createBlog, getAllBlogs } = require("../controllers/blog-controller");
+const { createBlog, getAllBlogs, deleteBlog } = require("../controllers/blog-controller");
 const {
   deletePreviousFile,
   upload,
@@ -8,7 +8,9 @@ const checkToken = require("../middlewares/blog_auth_middleware");
 
 const router = express.Router();
 
-router.route("/:id").get(checkToken,getAllBlogs);
+router.route("/:id")
+.get(checkToken,getAllBlogs)
+.delete(deleteBlog)
 
 // creating a new blog post
 router.post(

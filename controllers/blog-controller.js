@@ -1,6 +1,6 @@
 const userModel = require("../models/user_model");
 const blogModel = require("../models/blog_model");
-const { uploadImage } = require("./image-cloudinary");
+const { uploadImage, deleteImageByUrl } = require("./image-cloudinary");
 
 // Create a new blog post for an author
 const createBlog = async (req, res) => {
@@ -51,4 +51,33 @@ const getAllBlogs = async (req, res) => {
   }
 };
 
-module.exports = { createBlog, getAllBlogs };
+// Delete a blog post for an author
+const deleteBlog = async (req, res) => {
+  const blogId = req.params.id;
+  try {
+    const blog = await blogModel.findById(blogId);
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ message: "Blog not found", success: false });
+    }
+    try {
+      // Delete the image from Cloudinary
+      await deleteImageByUrl(blog.coverImage)
+      await blogModel.deleteOne({_id: blog._id})
+      res
+        .status(200)
+        .json({ message: "Blog deleted successfully", success: true });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ message: "Failed to delete blog", success: false });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Something went wrong", success: false });
+  }
+};
+
+module.exports = { createBlog, getAllBlogs, deleteBlog };
