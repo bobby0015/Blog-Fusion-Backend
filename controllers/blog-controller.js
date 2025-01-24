@@ -83,7 +83,7 @@ const deleteBlog = async (req, res) => {
 // Update a blog post for an author
 const updateBlog = async (req, res) => {
   const blogId = req.params.id;
-  const { title, content, tags } = req.body;
+  const { title, content, tags, likes } = req.body;
   try {
     const blog = await blogModel.findById(blogId);
     if (!blog) {
@@ -102,6 +102,7 @@ const updateBlog = async (req, res) => {
         content: content || blog.content,
         tags: tags || blog.tags,
         coverImage: image_url || blog.coverImage,
+        likes: (likes && [...blog.likes, likes]) || blog.likes,
       };
       const updatedBlog = await blogModel.updateOne(
         { _id: blog._id },
